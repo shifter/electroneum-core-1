@@ -3,12 +3,15 @@ TEMPLATE = app
 QT += core gui
 QT += qml quick
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4){
+  QT += widgets
+  #QT += multimedia-private
+}
 
 WALLET_ROOT=$$PWD/electroneum
 
 CONFIG += c++11
-#CONFIG += WITH_SCANNER
+CONFIG += WITH_SCANNER
 
 # cleaning "auto-generated" electroneum directory on "make distclean"
 QMAKE_DISTCLEAN += -r $$WALLET_ROOT
@@ -133,8 +136,11 @@ CONFIG(WITH_SCANNER) {
         QT += multimedia
         DEFINES += "WITH_SCANNER"
         INCLUDEPATH += $$PWD/src/QR-Code-scanner
+
+        LIBS += -L$$PWD/src/zbar/lib  -L/c/msys32/mingw32/lib
+        INCLUDEPATH += $$PWD/src/zbar/include
+
         HEADERS += \
-            src/QR-Code-scanner/zbar.h \
             src/QR-Code-scanner/QrScanThread.h \
             src/QR-Code-scanner/QrCodeScanner.h
         SOURCES += \
@@ -144,7 +150,12 @@ CONFIG(WITH_SCANNER) {
             INCLUDEPATH += $$PWD/../ZBar/include
             LIBS += -lzbarjni -liconv
         } else {
-            LIBS += -lzbar
+            win32 {
+            LIBS +=  -L/c/msys32/mingw32/i686-w64-mingw32/lib
+            LIBS += -lzbar -ljpeg -Wl,-Bstatic,-liconv -lvfw32
+            }
+            #LIBS += -lzbar -liconv -ljpeg
+            #LIBS += libzbar.dll.a
         }
     } else {
         message("Skipping camera scanner because of Incompatible Qt Version !")
@@ -163,12 +174,12 @@ win32 {
     # WIN64 Host settings
     contains(MSYS_HOST_ARCH, x86_64) {
         message("Host is 64bit")
-        MSYS_ROOT_PATH=e:/msys64
+        MSYS_ROOT_PATH=c:/msys64
 
     # WIN32 Host settings
     } else {
         message("Host is 32bit")
-        MSYS_ROOT_PATH=e:/msys64
+        MSYS_ROOT_PATH=c:/msys32
     }
 
     # WIN64 Target settings

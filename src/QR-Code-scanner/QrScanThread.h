@@ -44,6 +44,7 @@ class QrScanThread : public QThread, public zbar::Image::Handler
 public:
     QrScanThread(QObject *parent = Q_NULLPTR);
     void addFrame(const QVideoFrame &frame);
+    virtual void stop();
 
 Q_SIGNALS:
     void decoded(int type, const QString &data);
@@ -51,12 +52,12 @@ Q_SIGNALS:
 
 protected:
     virtual void run();
-    virtual void stop();
     void processVideoFrame(const QVideoFrame &);
     void processQImage(const QImage &);
     void processZImage(zbar::Image &image);
     virtual void image_callback(zbar::Image &image);
     bool zimageFromQImage(const QImage&, zbar::Image &);
+    QVideoFrame convertFrameFormat(const QVideoFrame &inputframe, QVideoFrame::PixelFormat outputFormat);
 
 private:
     zbar::ImageScanner m_scanner;

@@ -8,6 +8,9 @@ if [ -z $BUILD_TYPE ]; then
     BUILD_TYPE=release
 fi
 
+#remove build directory
+rm -rf build
+
 if [ "$BUILD_TYPE" == "release" ]; then
     echo "Building release"
     CONFIG="CONFIG+=release";
@@ -89,10 +92,25 @@ qmake ../electroneum-wallet-gui.pro "$CONFIG" || exit
 $MAKE || exit 
 
 # Copy monerod to bin folder
-if [ "$platform" != "mingw32" ] && [ "$ANDROID" != true ]; then
-cp ../$MONERO_DIR/bin/$MONEROD_EXEC $BIN_PATH
-fi
+#if [[ "$platform" == "mingw32" ] || [ "$platform" == "mingw64" ]] && [ "$ANDROID" != true ]; then
+#cp ../$MONERO_DIR/bin/$MONEROD_EXEC $BIN_PATH
+#fi
 
 # make deploy
+# Copy monerod to bin folder
+if [ "$ANDROID" != true ]; then
+  if [ "$platform" == "mingw32" ] || [ "$platform" == "mingw64" ]; then
+    DAEMON_FILES=(electroneum-blockchain-import.exe electroneum-blockchain-export.exe electroneum-wallet-cli.exe electroneum-wallet-rpc.exe electroneumd.exe)
+    if [ -d $ROOT_DIR/$MONERO_DIR/build/$BUILD_TYPE/bin ]; then
+      cd $ROOT_DIR/$MONERO_DIR/build/release/bin
+      for f in "${DAEMON_FILES[@]}"; do cp $ROOT_DIR/$MONERO_DIR/build/$BUILD_TYPE/bin/$f $ROOT_DIR/build/$BUILD_TYPE/bin || exit 1; done
+      cd $ROOT_DIR
+    fi
+  fi
+fi
+
 popd
+
+cd $ROOT_DIR/build && make deploy && cd $ROOT_DIR
+
 

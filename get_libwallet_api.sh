@@ -17,13 +17,45 @@ if [ ! -d $MONERO_DIR/src ]; then
 fi
 git submodule update --remote
 git -C $MONERO_DIR fetch
-git -C $MONERO_DIR checkout release-v0.11.0.0
+
+# still no branch release-v0.11.0.0 - ignore checkout
+#git -C $MONERO_DIR checkout release-v0.11.0.0
 
 # get electroneum core tag
 get_tag
 # create local Electroneum branch
 git -C $MONERO_DIR checkout -B $VERSIONTAG
 
+#############################################
+######## prebuilding daemon #################
+#############################################
+# reusing function from "utils.sh"
+platform=$(get_platform)
+# default make executable
+MAKE="make"
+echo "cleaning up existing Electroneum build dir"
+rm -fr $MONERO_DIR/build
+rm -fr $MONERO_DIR/bin
+# prebuilding daemon
+cd $MONERO_DIR
+if [ "$platform" == "mingw64" ]; then
+       echo "Prebuilding daemon for $platform ..."
+    $MAKE release-static-win64 -j4
+    #if [ "$STATIC" == true ]; then
+    #else
+    #fi
+elif [ "$platform" == "mingw32" ]; then
+       echo "Prebuilding daemon for $platform ..."
+    $MAKE release-static-win32 -j4
+    #$MAKE release-static-win32 -j$CPU_CORE_COUNT
+    #if [ "$STATIC" == true ]; then
+    #else
+    #fi
+fi
+cd $MONERO_DIR
+#############################################
+
+######### no release branch - ignore git merge ##################
 # Merge monero PR dependencies
 
 # Workaround for git username requirements
@@ -129,6 +161,7 @@ platform=$(get_platform)
 # default make executable
 make_exec="make"
 
+
 ## OS X
 if [ "$platform" == "darwin" ]; then
     echo "Configuring build for MacOS.."
@@ -184,7 +217,6 @@ elif [ "$platform" == "mingw64" ]; then
     echo "Configuring build for MINGW64.."
     BOOST_ROOT=/mingw64/boost
     cmake -D CMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -D STATIC=ON -D BOOST_ROOT="$BOOST_ROOT" -D ARCH="x86-64" -D BUILD_GUI_DEPS=ON -D INSTALL_VENDORED_LIBUNBOUND=ON -D CMAKE_INSTALL_PREFIX="$MONERO_DIR" -G "MSYS Makefiles" ../..
-
 ## Windows 32
 elif [ "$platform" == "mingw32" ]; then
     # Do something under Windows NT platform

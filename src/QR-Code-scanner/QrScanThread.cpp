@@ -31,7 +31,8 @@
 #include <QDebug>
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
-extern QImage qt_imageFromVideoFrame(const QVideoFrame &f);
+  extern QImage qt_imageFromVideoFrame(const QVideoFrame &f);
+  //#include "private/qvideoframe_p.h"
 #else
 QImage qt_imageFromVideoFrame(const QVideoFrame &f){
     Q_ASSERT_X(0 != 0, "qt_imageFromVideoFrame", "Should have been managed in .pro");
@@ -72,9 +73,11 @@ bool QrScanThread::zimageFromQImage(const QImage &qimg, zbar::Image &dst)
         case QImage::Format_RGB32 :
         case QImage::Format_ARGB32 :
         case QImage::Format_ARGB32_Premultiplied : 
+        case QImage::Format_RGB888 :
             break;
         default :
-            emit notifyError(QString("Invalid QImage Format !"));
+        // return error on empty first frame
+        //emit notifyError(QString("Invalid QImage Format !"));
             return false;
     }
     unsigned int bpl( qimg.bytesPerLine() ), width( bpl / 4), height( qimg.height());
@@ -104,12 +107,42 @@ void QrScanThread::processQImage(const QImage &qimg)
 
 void QrScanThread::processVideoFrame(const QVideoFrame &frame)
 {
-    processQImage( qt_imageFromVideoFrame(frame) );
+    if (!frame.isValid())
+    {
+        // producing error on empty first frame
+        //emit notifyError(QString("Invalid QVideoFrame Format ! size:" + m_queue.size()));
+        return;
+    }
+    QImage tempImage=qt_imageFromVideoFrame(frame);
+    processQImage( tempImage );
 }
+
+
+
+//
+//  convertFrameFormat()
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+QVideoFrame convertFrameFormat(const QVideoFrame &inputframe, QVideoFrame::PixelFormat outputFormat)
+    {
+        //inputframe.map(QAbstractVideoBuffer::ReadOnly);
+        //QImage tempImage=qt_imageFromVideoFrame(inputframe);
+        //inputframe.unmap();
+        //QVideoFrame outputFrame=QVideoFrame(tempImage);
+        //return outputFrame;
+    }
 
 void QrScanThread::stop()
 {
     m_running = false;
+    m_waitCondition.wakeOne();
 }
 
 void QrScanThread::addFrame(const QVideoFrame &frame)
@@ -124,9 +157,10 @@ void QrScanThread::run()
     QVideoFrame frame;
     while(m_running) {
         QMutexLocker locker(&m_mutex);
-        while(m_queue.isEmpty())
+        while(m_queue.isEmpty() && m_running)
             m_waitCondition.wait(&m_mutex);
-        processVideoFrame(m_queue.takeFirst());
+        if(!m_queue.isEmpty())
+            processVideoFrame(m_queue.takeFirst());
     }
 }
 
