@@ -101,6 +101,8 @@ Install Qt5 from [official site](https://www.qt.io/download-open-source/)
 
 * run:
 
+        export PATH=$(ls -rd /c/Qt/5.[6,7,8]/mingw53_32/bin | head -1):$PATH
+
         cd /c/build/electroneum-core
 
         ./build.sh
