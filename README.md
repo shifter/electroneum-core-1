@@ -42,9 +42,9 @@ Install Qt5 from [official site](https://www.qt.io/download-open-source/)
 
         MSYS2 32 bit: http://repo.msys2.org/distrib/i686/msys2-i686-20161025.exe
 
-* Correct MSYS2 install directories are: c:\msys32 for Windows 32-bit PC and c:\msys64 for Windows 64-bit.
+* MSYS2 should be installed in directory: "c:\msys32".
 
-** If MSYS2 already installed with path other then c:/msys64 (for Windows 64) or c:/msys32 (for 32 bit Windows)**
+** If MSYS2 already installed with path other then "c:/msys32" **
 
 * Download both Electroneum package archives from:
       [GUI https://github.com/tviho/electroneum-core.git](https://github.com/tviho/electroneum-core.git)
