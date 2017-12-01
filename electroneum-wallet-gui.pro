@@ -11,7 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 4){
 WALLET_ROOT=$$PWD/electroneum
 
 CONFIG += c++11
-CONFIG += WITH_SCANNER
+#CONFIG += WITH_SCANNER
 
 # cleaning "auto-generated" electroneum directory on "make distclean"
 QMAKE_DISTCLEAN += -r $$WALLET_ROOT
@@ -137,9 +137,6 @@ CONFIG(WITH_SCANNER) {
         DEFINES += "WITH_SCANNER"
         INCLUDEPATH += $$PWD/src/QR-Code-scanner
 
-        LIBS += -L$$PWD/src/zbar/lib  -L/c/msys32/mingw32/lib
-        INCLUDEPATH += $$PWD/src/zbar/include
-
         HEADERS += \
             src/QR-Code-scanner/QrScanThread.h \
             src/QR-Code-scanner/QrCodeScanner.h
@@ -151,11 +148,18 @@ CONFIG(WITH_SCANNER) {
             LIBS += -lzbarjni -liconv
         } else {
             win32 {
-            LIBS +=  -L/c/msys32/mingw32/i686-w64-mingw32/lib
-            LIBS += -lzbar -ljpeg -Wl,-Bstatic,-liconv -lvfw32
+                # WIN64 Target settings
+                contains(MSYS_HOST_ARCH, x86_64) {
+                LIBS += -L/c/msys64/mingw32/i686-w64-mingw32/lib
+                LIBS += -L$$PWD/src/zbar/lib  -L/c/msys64/mingw32/lib
+                } else {
+                # WIN32 Host settings
+                LIBS += -L/c/msys32/mingw32/i686-w64-mingw32/lib
+                LIBS += -L$$PWD/src/zbar/lib  -L/c/msys32/mingw32/lib
+                }
+                INCLUDEPATH += $$PWD/src/zbar/include
+                LIBS += -lzbar -ljpeg -Wl,-Bstatic,-liconv -lvfw32
             }
-            #LIBS += -lzbar -liconv -ljpeg
-            #LIBS += libzbar.dll.a
         }
     } else {
         message("Skipping camera scanner because of Incompatible Qt Version !")
